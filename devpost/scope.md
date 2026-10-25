@@ -42,7 +42,3 @@ The "oh, that's cool" beat: the same pill list produces a different, body-aware 
 - Reminders and notifications.
 - Calendar export or a printable card for the doctor.
 - Photo of a prescription label as input.
-
-## Explicitly Cut
-- Calculating whether food eaten is "enough" for the next pill or insulin dose: this is insulin dose calculation, which is medical dosing advice. It needs clinical validation and would undermine trust in the demo. JetDose keeps food-awareness to timing doses around local meals.
-- Accounts and cloud sync: not needed to prove the kernel.
