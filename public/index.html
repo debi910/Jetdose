@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JetDose</title>
+  <meta name="description" content="Re-times your medicines for a new time zone around how your body adapts, and keeps the plan offline.">
+  <meta name="theme-color" content="#0f1b2d">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <img src="/icon.svg" alt="" width="36" height="36">
+      <div>
+        <h1>JetDose</h1>
+        <p>Your medicines, on time in any time zone</p>
+      </div>
+    </div>
+    <span id="offline-badge" class="badge" hidden>Offline ready</span>
+  </header>
+
+  <nav class="steps" aria-label="Steps">
+    <button class="step" data-step="meds" aria-current="step"><span>1</span> Medicines</button>
+    <button class="step" data-step="trip"><span>2</span> Trip</button>
+    <button class="step" data-step="plan"><span>3</span> Dose plan</button>
+  </nav>
+
+  <main>
+    <section id="meds" class="panel">
+      <div class="card">
+        <label class="field">
+          <span>Home city</span>
+          <select id="home"></select>
+        </label>
+        <p class="hint" id="home-tz"></p>
+      </div>
+
+      <div class="card">
+        <label class="field" for="med-text"><span>Describe a medicine in your own words</span></label>
+        <div class="compose">
+          <textarea id="med-text" rows="2" placeholder="e.g. Tacrolimus 2 mg every 12 hours at 8am and 8pm"></textarea>
+          <button id="add-med" class="primary">Add</button>
+        </div>
+        <div class="examples" id="examples"></div>
+        <p class="hint" id="reader-status"></p>
+      </div>
+
+      <div id="med-list"></div>
+      <div class="empty card" id="med-empty">
+        <p>No medicines yet. Type one above, or <button class="link" id="load-sample">load a sample traveller</button>.</p>
+      </div>
+      <div class="actions"><button class="primary" data-goto="trip">Next: your trip</button></div>
+    </section>
+
+    <section id="trip" class="panel" hidden>
+      <div class="card pass">
+        <div class="pass-row">
+          <div class="field"><span>From</span><strong id="trip-from"></strong></div>
+          <div class="plane" aria-hidden="true">✈</div>
+          <label class="field"><span>To</span><select id="dest"></select></label>
+        </div>
+        <p class="hint" id="tz-diff"></p>
+        <div class="tear"></div>
+        <div class="grid">
+          <label class="field"><span>Departure date</span><input type="date" id="depart-date"></label>
+          <label class="field"><span>Departure time (home)</span><input type="time" id="depart-time"></label>
+          <label class="field"><span>Flight length (hours)</span><input type="number" id="flight-hours" min="1" max="20" step="0.5"></label>
+          <label class="field"><span>Days of stay</span><input type="number" id="stay-days" min="1" max="60"></label>
+        </div>
+        <p class="hint">The return flight leaves at the same local clock time on your last day.</p>
+      </div>
+      <div class="actions"><button class="primary" id="make-plan">Plan my doses</button></div>
+    </section>
+
+    <section id="plan" class="panel" hidden>
+      <div id="plan-empty" class="card empty"><p>Add your medicines and a trip first.</p></div>
+      <div id="plan-body" hidden>
+        <div class="card pass" id="plan-pass"></div>
+        <div class="compare">
+          <div class="toggle" role="tablist">
+            <button role="tab" data-view="jetdose" aria-selected="true">JetDose plan</button>
+            <button role="tab" data-view="plain" aria-selected="false">Plain time-zone converter</button>
+          </div>
+          <div id="summary" class="summary"></div>
+        </div>
+        <div id="filters" class="filters"></div>
+        <ol id="timeline" class="timeline"></ol>
+      </div>
+      <p class="safety">JetDose only changes timing, never doses. Check the plan with your doctor or pharmacist, especially for insulin, transplant or seizure medicines.</p>
+    </section>
+  </main>
+
+  <template id="med-card">
+    <article class="card med">
+      <header>
+        <input class="name" aria-label="Medicine name" placeholder="Medicine name">
+        <input class="dose" aria-label="Dose" placeholder="Dose">
+        <button class="remove" aria-label="Remove medicine">×</button>
+      </header>
+      <div class="grid">
+        <label class="field"><span>Timing</span>
+          <select class="type">
+            <option value="interval">Fixed interval</option>
+            <option value="daily">Once daily</option>
+            <option value="with_food">With food</option>
+          </select>
+        </label>
+        <label class="field"><span>Usual home times</span><input class="times" placeholder="08:00, 20:00"></label>
+        <label class="field"><span>Can move by (hours)</span><input class="flex" type="number" min="0.5" max="6" step="0.5"></label>
+      </div>
+      <p class="meta"><span class="source"></span><span class="note"></span></p>
+    </article>
+  </template>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
