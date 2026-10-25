@@ -1,0 +1,10 @@
+{
+  "name": "JetDose",
+  "short_name": "JetDose",
+  "description": "Your medicines, on time in any time zone.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1b2d",
+  "theme_color": "#0f1b2d",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
