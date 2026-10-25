@@ -9,7 +9,7 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
 
 ## Slices
 
-- [ ] **1. You can see a body-aware dose plan for a sample trip**
+- [x] **1. You can see a body-aware dose plan for a sample trip**
   Becomes usable: Running `npm start` and opening the app shows a day-by-day dose timeline for sample medicines on a Mumbai → London trip, with local time, home time, gap and reason for each dose.
   Why now: The planner is the unique kernel and the riskiest logic (time-zone maths, gradual shifting), so it comes first, with the scaffold folded in.
   PRD ref: `prd.md > Body-aware dose plan (the kernel)`, `prd.md > The Core Journey` (steps 4-5)
@@ -19,7 +19,7 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
   Learner check: Open http://localhost:3000 and read the plan for the sample trip; does each moved dose explain itself?
   Commit: `Add body-aware dose planner with sample timeline`
 
-- [ ] **2. You can add your own medicines and trip, and they are remembered**
+- [x] **2. You can add your own medicines and trip, and they are remembered**
   Becomes usable: Typing a medicine sentence creates an editable card via the built-in reader; home city and trip form drive the plan; everything survives a reload.
   Why now: Turns the kernel into the traveller's own journey before adding the LLM.
   PRD ref: `prd.md > Home and medicine list`, `prd.md > Trip setup`, `prd.md > States and Boundaries`
@@ -29,7 +29,7 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
   Learner check: Add your own medicines, set a trip, reload the page.
   Commit: `Add medicine entry, trip setup and saved state`
 
-- [ ] **3. The smart reader turns sentences into medicine cards**
+- [x] **3. The smart reader turns sentences into medicine cards**
   Becomes usable: With an API key, `/api/parse` uses Claude structured output; without one, the page falls back to the built-in reader and labels the card.
   Why now: The LLM is Debi's learning goal but not required for the kernel, so it layers on a working app.
   PRD ref: `prd.md > Home and medicine list`
@@ -39,7 +39,7 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
   Learner check: Add a medicine with and without the key and compare the cards.
   Commit: `Add Claude-powered medicine reader with fallback`
 
-- [ ] **4. You can compare JetDose with a plain time-zone converter**
+- [x] **4. You can compare JetDose with a plain time-zone converter**
   Becomes usable: A switch shows the plain-converter plan, unsafe gaps are red, and a summary counts unsafe gaps for each.
   Why now: This is the demo's "oh, that's cool" beat and depends on the plan view.
   PRD ref: `prd.md > Plain converter comparison`
@@ -49,7 +49,7 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
   Learner check: Flip the switch and see the red gaps disappear.
   Commit: `Add plain converter comparison`
 
-- [ ] **5. The plan works offline**
+- [x] **5. The plan works offline**
   Becomes usable: After one visit the app and the saved plan open with the network off.
   Why now: Required by the PRD, and independent of the other slices.
   PRD ref: `prd.md > Works offline`
@@ -61,7 +61,7 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — Debi delegated checkpoints; agent reviews screenshots after slice 1 and Debi reviews the finished app
+- [x] Early usable behavior explored — Debi delegated checkpoints; agent reviews screenshots after slice 1 and Debi reviews the finished app
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -70,6 +70,11 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
 
 ## Code Tour and App Map
 
-- [ ] Learning wrap-up and `devpost/app-map.html`
+- [ ] Learning wrap-up and `devpost/app-map.html` — app map written (reference route, not toured); wrap-up with Debi still open
 
 ## Revisions
+
+- Planner: a dose may switch to any of the medicine's usual times, not only the next one in order. Testing a Mumbai → New York trip showed a 12-hourly pill drifting for five doses when it could simply swap morning and evening; covered by the test "a 12-hourly pill flying ~12 hours swaps morning and evening instead of drifting".
+- Slices 2 and 4 landed in one commit (`Add medicine entry, trip setup, dose timeline and saved state`) because the comparison switch shares the timeline renderer; both were verified with headless browser screenshots.
+- Early checkpoint: Debi delegated hands-on checks, so the agent reviewed headless screenshots after slice 1 and found and fixed a CSS bug where all three steps showed at once.
+- Smart reader verified up to the API call (a fake key returns 401 from the API and the page falls back to built-in rules); not yet run with a real key.

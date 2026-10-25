@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JetDose App Map</title>
+<style>
+  :root { --navy:#0f1b2d; --paper:#f7f4ec; --amber:#f2a541; --ink:#1b2433; --muted:#5d6879; --line:#d9d2c1; }
+  body { margin:0; font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--navy); color:var(--ink); }
+  main { max-width:860px; margin:0 auto; padding:28px 16px 60px; display:grid; gap:16px; }
+  h1 { color:var(--paper); margin:0; } .sub { color:#a9b6c9; margin:0; }
+  section { background:var(--paper); border-radius:14px; padding:18px 20px; }
+  h2 { margin:0 0 8px; font-size:18px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; background:#ece7da; padding:1px 5px; border-radius:5px; font-size:13px; }
+  ol, ul { margin:0; padding-left:20px; } li { margin:4px 0; }
+  svg { width:100%; height:auto; }
+  .muted { color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>JetDose app map</h1>
+  <p class="sub">A snapshot of how JetDose works, from commit <code>bb0c068</code>. It can drift as the code changes.</p>
+
+  <section>
+    <h2>What the app is</h2>
+    <p>A web page that plans when to take each medicine during a trip across time zones, plus a tiny Node server. The planning runs in the browser, so the plan works offline. The server only serves files and, when an API key is set, asks Claude to read a medicine sentence.</p>
+  </section>
+
+  <section>
+    <h2>One action, end to end: "Plan my doses"</h2>
+    <svg viewBox="0 0 820 200" role="img" aria-label="Plan my doses flows from the trip form through the planner to the timeline, with medicines read by Claude or built-in rules">
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5d6879"/></marker></defs>
+      <g font-size="13" font-family="system-ui, sans-serif">
+        <rect x="10" y="20" width="170" height="64" rx="10" fill="#fff" stroke="#d9d2c1"/>
+        <text x="95" y="46" text-anchor="middle" font-weight="700">Medicine sentence</text>
+        <text x="95" y="66" text-anchor="middle" fill="#5d6879">app.js · addMedicine</text>
+        <rect x="10" y="116" width="170" height="64" rx="10" fill="#fff" stroke="#d9d2c1"/>
+        <text x="95" y="142" text-anchor="middle" font-weight="700">Claude or rules</text>
+        <text x="95" y="162" text-anchor="middle" fill="#5d6879">server.js · parser.js</text>
+        <rect x="230" y="68" width="170" height="64" rx="10" fill="#fff" stroke="#d9d2c1"/>
+        <text x="315" y="94" text-anchor="middle" font-weight="700">Saved state</text>
+        <text x="315" y="114" text-anchor="middle" fill="#5d6879">localStorage jetdose:v1</text>
+        <rect x="450" y="68" width="170" height="64" rx="10" fill="#f2a541"/>
+        <text x="535" y="94" text-anchor="middle" font-weight="700">Planner</text>
+        <text x="535" y="114" text-anchor="middle">planner.js · planTrip</text>
+        <rect x="660" y="68" width="150" height="64" rx="10" fill="#0f1b2d"/>
+        <text x="735" y="94" text-anchor="middle" font-weight="700" fill="#f7f4ec">Timeline</text>
+        <text x="735" y="114" text-anchor="middle" fill="#a9b6c9">app.js · renderPlan</text>
+        <path d="M95 84V112" stroke="#5d6879" marker-end="url(#a)"/>
+        <path d="M180 148L228 112" stroke="#5d6879" fill="none" marker-end="url(#a)"/>
+        <path d="M400 100H446" stroke="#5d6879" marker-end="url(#a)"/>
+        <path d="M620 100H656" stroke="#5d6879" marker-end="url(#a)"/>
+      </g>
+    </svg>
+  </section>
+
+  <section>
+    <h2>Reference route (3 stops)</h2>
+    <ol>
+      <li><code>public/js/app.js</code> → <code>makePlan</code>: reads home city and trip from saved state and calls the planner.</li>
+      <li><code>public/js/planner.js</code> → <code>planMedicine</code>: the kernel. Each dose is due one usual gap after the last; it moves toward the closest usual local time by at most <code>flexHours</code>. <code>planMedicinePlain</code> builds the plain-converter comparison.</li>
+      <li><code>public/js/app.js</code> → <code>renderPlan</code> and <code>doseRow</code>: groups doses by day and place and shows local time, home time, gap and reason.</li>
+    </ol>
+    <p class="muted">This route was not toured interactively; it is a guide for reading the code.</p>
+  </section>
+
+  <section>
+    <h2>To change this, start here</h2>
+    <ul>
+      <li>Default flexibility per timing type: <code>DEFAULT_FLEX</code> in <code>planner.js</code>.</li>
+      <li>Meal times for "with food" medicines: <code>MEALS</code> in <code>planner.js</code>.</li>
+      <li>How Claude reads a sentence: the <code>SYSTEM</code> prompt and the <code>Medicine</code> schema in <code>server.js</code>.</li>
+      <li>Rules used offline: <code>parseMedicineText</code> in <code>parser.js</code>.</li>
+      <li>Cities and time zones: <code>CITIES</code> in <code>tz.js</code>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>A practice to reuse</h2>
+    <p>The PRD criterion "doses keep their spacing" became the test <code>every JetDose gap stays within the medicine's flexibility</code> in <code>tests/planner.test.js</code>. A second test, written after trying a Mumbai → New York trip, exposed doses drifting for days when they could simply swap morning and evening (recorded under Revisions in <code>devpost/checklist.md</code>). Writing the behaviour as a checkable rule first made the flaw visible as soon as a new route was tried; the same approach works for any logic-heavy feature.</p>
+    <p>For the ML/LLM goal: compare <code>server.js</code> (Claude with a Zod schema) with <code>parser.js</code> (hand-written rules) on the same sentences. The schema forces the model to return the same shape the rules return, so the rest of the app does not care which reader ran.</p>
+  </section>
+
+  <section>
+    <h2>Run it again</h2>
+    <p><code>npm install</code>, then <code>npm start</code> and open <code>http://localhost:3000</code>. Run <code>npm test</code> for the planner and reader tests.</p>
+  </section>
+</main>
+</body>
+</html>
