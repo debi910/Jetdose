@@ -78,3 +78,4 @@ Build mode: fast (Debi delegated the build: "Do whatever is required, dont invok
 - Slices 2 and 4 landed in one commit (`Add medicine entry, trip setup, dose timeline and saved state`) because the comparison switch shares the timeline renderer; both were verified with headless browser screenshots.
 - Early checkpoint: Debi delegated hands-on checks, so the agent reviewed headless screenshots after slice 1 and found and fixed a CSS bug where all three steps showed at once.
 - Smart reader verified up to the API call (a fake key returns 401 from the API and the page falls back to built-in rules); not yet run with a real key.
+- Round 2 (Oct 25): redesigned the UI (route arc, live clocks, body-clock dial, dose rail, toasts, Emil Kowalski motion principles) and added sleep-aware timing, calendar export, next-dose countdown and a printable travel card. Tests: 16 pass.

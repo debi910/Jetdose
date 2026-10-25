@@ -14,6 +14,15 @@ export const MEALS = [
 ];
 
 export const DEFAULT_FLEX = { interval: 2, daily: 3, with_food: 3 };
+export const DEFAULT_SLEEP = { from: "23:00", to: "07:00" };
+
+// Is a wall-clock time inside the sleep window (which may wrap past midnight)?
+export function inSleep(time, sleep = DEFAULT_SLEEP) {
+  const h = timeToHours(time);
+  const a = timeToHours(sleep.from);
+  const b = timeToHours(sleep.to);
+  return a <= b ? h >= a && h < b : h >= a || h < b;
+}
 
 export function nearestMeal(time) {
   const h = timeToHours(time);
@@ -97,7 +106,7 @@ function describe(dose, home, tl) {
 }
 
 // JetDose plan for one medicine.
-export function planMedicine(med, home, trip) {
+export function planMedicine(med, home, trip, sleep = DEFAULT_SLEEP) {
   const tl = tripTimeline(home, trip);
   const times = sortedTimes(med);
   const gaps = nominalGaps(times);
@@ -123,9 +132,32 @@ export function planMedicine(med, home, trip) {
     });
     const goal = targetTime(med, times[k]);
     const wanted = (target - candidate) / HOUR;
-    const shift = Math.max(-flex, Math.min(flex, wanted));
-    const utc = Math.round((candidate + shift * HOUR) / MINUTE) * MINUTE;
+    let shift = Math.max(-flex, Math.min(flex, wanted));
+    let utc = Math.round((candidate + shift * HOUR) / MINUTE) * MINUTE;
     const remaining = wanted - shift;
+
+    // Sleep-aware: a dose that would wake you is pulled to the edge of your sleep
+    // window when the medicine's flexibility allows; otherwise it is flagged.
+    let night = null;
+    const loc = locationAt(utc, tl);
+    const localTime = wallClock(utc, loc.tz).time;
+    if (sleep && loc.place !== "flight" && inSleep(localTime, sleep) && !inSleep(goal, sleep)) {
+      const h = timeToHours(localTime);
+      const back = (h - timeToHours(sleep.from) + 24) % 24 + 0.25;
+      const forward = (timeToHours(sleep.to) - h + 24) % 24;
+      // Only nudge in the direction the dose is already travelling, so it never stalls.
+      const options = [shift - back, shift + forward].filter(
+        (s) => Math.abs(s) <= flex + 1e-9 && (Math.abs(wanted) < 1 / 60 || Math.sign(s - shift) === Math.sign(wanted))
+      );
+      if (options.length) {
+        const best = options.reduce((a, b) => (Math.abs(a - shift) <= Math.abs(b - shift) ? a : b));
+        utc = Math.round((candidate + best * HOUR) / MINUTE) * MINUTE;
+        shift = best;
+        night = "moved";
+      } else {
+        night = "alarm";
+      }
+    }
 
     let kind = "same";
     let reason = "Usual spacing";
@@ -140,6 +172,8 @@ export function planMedicine(med, home, trip) {
       }
     }
     if (med.type === "with_food" && kind !== "shifting") reason += ` · with ${nearestMeal(times[k]).name}`;
+    if (night === "moved") reason += " · kept out of your sleep hours";
+    if (night === "alarm") reason += " · falls in your sleep hours, set an alarm";
 
     const actualGap = (utc - prev) / HOUR;
     if (utc >= tl.start && utc < tl.end) {
@@ -156,6 +190,7 @@ export function planMedicine(med, home, trip) {
             safe: Math.abs(actualGap - gap) <= flex + 0.01,
             kind,
             reason,
+            night,
           },
           home,
           tl
@@ -214,9 +249,9 @@ export function planMedicinePlain(med, home, trip) {
   return doses;
 }
 
-export function planTrip({ home, medicines, trip }) {
+export function planTrip({ home, medicines, trip, sleep = DEFAULT_SLEEP }) {
   const tl = tripTimeline(home, trip);
-  const jetdose = medicines.flatMap((m) => planMedicine(m, home, trip)).sort((a, b) => a.utc - b.utc);
+  const jetdose = medicines.flatMap((m) => planMedicine(m, home, trip, sleep)).sort((a, b) => a.utc - b.utc);
   const plain = medicines.flatMap((m) => planMedicinePlain(m, home, trip)).sort((a, b) => a.utc - b.utc);
   return {
     timeline: tl,
@@ -225,6 +260,10 @@ export function planTrip({ home, medicines, trip }) {
     unsafe: {
       jetdose: jetdose.filter((d) => !d.safe).length,
       plain: plain.filter((d) => !d.safe).length,
+    },
+    night: {
+      jetdose: jetdose.filter((d) => d.place !== "flight" && inSleep(d.local.time, sleep)).length,
+      plain: plain.filter((d) => d.place !== "flight" && inSleep(d.local.time, sleep)).length,
     },
   };
 }

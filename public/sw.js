@@ -1,6 +1,6 @@
 // Offline: keep the app's own files in a cache and serve them first; the API always goes to the network.
-const CACHE = "jetdose-v1";
-const FILES = ["/", "/index.html", "/css/style.css", "/js/app.js", "/js/planner.js", "/js/parser.js", "/js/tz.js", "/icon.svg", "/manifest.webmanifest"];
+const CACHE = "jetdose-v2";
+const FILES = ["/", "/index.html", "/css/style.css", "/js/app.js", "/js/planner.js", "/js/parser.js", "/js/tz.js", "/js/ics.js", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
